@@ -1,0 +1,30 @@
+name: NEXUS SEO Daily Audit
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 8 * * *'
+permissions:
+  contents: write
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Crawl Bravo Dispatch
+        env:
+          TARGET_URL: https://bravo-dispatch.lucasonfire77.workers.dev/
+          MAX_PAGES: '30'
+        run: python scripts/audit.py
+      - name: Commit updated report
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add docs/data/report.json
+          if ! git diff --cached --quiet; then
+            git commit -m 'chore: update NEXUS SEO audit report'
+            git push
+          fi
